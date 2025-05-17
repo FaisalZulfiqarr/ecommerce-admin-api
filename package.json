@@ -2,19 +2,26 @@
   "name": "ecommerce-admin-api",
   "version": "1.0.0",
   "description": "A back-end API project that can power a web admin dashboard for e-commerce managers.",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "create-db": "node scripts/create-db.js",
+    "migrate": "cross-env NODE_ENV=development npx sequelize-cli db:migrate",
+    "seed": "cross-env NODE_ENV=development npx sequelize-cli db:seed:all",
+    "reset": "cross-env NODE_ENV=development npx sequelize-cli db:drop && npm run create-db && npm run migrate && npm run seed",
+    "start": "node .",
+    "dev": "nodemon ."
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "mysql2": "^3.14.1",
     "sequelize": "^6.37.7"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "nodemon": "^3.1.10",
     "sequelize-cli": "^6.6.3"
   }
