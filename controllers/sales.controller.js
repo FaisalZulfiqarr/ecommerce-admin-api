@@ -32,8 +32,13 @@ exports.getSales = async (req, res) => {
 
 exports.createSale = async (req, res) => {
   try {
-    const { productId, quantity, price, date } = req.body;
-    const sale = await Sale.create({ productId, quantity, price, date });
+    const { productId, quantity, salePrice: totalPrice, saleDate } = req.body;
+    const sale = await Sale.create({
+      productId,
+      quantity,
+      totalPrice,
+      saleDate,
+    });
 
     const inventory = await require("../models").Inventory.findOne({
       where: { productId },
