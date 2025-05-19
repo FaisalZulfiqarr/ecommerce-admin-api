@@ -28,11 +28,11 @@ exports.getLowStock = async (req, res) => {
 
 exports.createInventory = async (req, res) => {
   try {
-    const { productId, quantity } = req.body;
-    const inv = await Inventory.create({ productId, quantity });
+    const { productId, stock } = req.body;
+    const inv = await Inventory.create({ productId, stock });
     await InventoryLog.create({
       productId,
-      change: quantity,
+      change: stock,
       reason: "Initial stock",
     });
     res.status(201).json(inv);
