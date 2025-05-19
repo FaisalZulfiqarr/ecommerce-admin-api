@@ -43,8 +43,6 @@ exports.deleteProduct = async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id);
     if (!product) return res.status(404).json({ error: "Product not found" });
-    await InventoryLog.destroy({ where: { productId: product.id } });
-    await Inventory.destroy({ where: { productId: product.id } });
     await product.destroy();
     res.status(204).end();
   } catch (err) {

@@ -1,4 +1,4 @@
-const { Sale, Product, Category } = require("../models");
+const { Sale, Product, Category, Sequelize } = require("../models");
 const { Op, fn, col, literal } = require("sequelize");
 
 exports.getSales = async (req, res) => {
@@ -7,17 +7,20 @@ exports.getSales = async (req, res) => {
 
     const where = {};
     if (startDate && endDate)
-      where.date = { [Op.between]: [startDate, endDate] };
+      where.saleDate = { [Op.between]: [startDate, endDate] };
     if (productId) where.productId = productId;
 
     const include = [];
     if (categoryId) {
       include.push({
         model: Product,
-        include: [{ model: Category, where: { id: categoryId } }],
+        as: "product",
+        include: [
+          { model: Category, as: "category", where: { id: categoryId } },
+        ],
       });
     } else {
-      include.push({ model: Product });
+      include.push({ model: Product, as: "product" });
     }
 
     const sales = await Sale.findAll({ where, include });
@@ -78,25 +81,31 @@ exports.getRevenue = async (req, res) => {
     const format = formatMap[groupBy] || "%Y-%m";
 
     const where = {};
-    const include = [{ model: Product }];
-
-    if (categoryId) {
-      include[0].include = [{ model: Category, where: { id: categoryId } }];
-    }
+    const include = [
+      {
+        model: Product,
+        as: "product",
+        include: categoryId
+          ? [{ model: Category, as: "category", where: { id: categoryId } }]
+          : [],
+      },
+    ];
 
     const revenue = await Sale.findAll({
       attributes: [
-        [fn("DATE_FORMAT", col("date"), format), "period"],
-        [fn("SUM", literal("quantity * price")), "totalRevenue"],
+        [fn("DATE_FORMAT", col("saleDate"), format), "period"],
+        "productId",
+        [fn("SUM", literal("quantity * totalPrice")), "totalRevenue"],
       ],
       include,
-      group: [literal(`period`)],
-      raw: true,
+      group: ["period", "productId"],
+      raw: false, // So associations like `product` get populated
     });
 
     res.json(revenue);
   } catch (err) {
-    res.status(400).json(err);
+    console.error("Revenue Error:", err);
+    res.status(400).json({ error: err.message });
   }
 };
 
@@ -104,13 +113,36 @@ exports.compareRevenue = async (req, res) => {
   try {
     const { period1, period2, categoryId } = req.body;
 
-    const makeQuery = (start, end) => {
-      const where = { date: { [Op.between]: [start, end] } };
-      const include = [{ model: Product }];
+    const makeQuery = async (start, end) => {
+      const where = {
+        saleDate: { [Op.between]: [start, end] },
+      };
+
       if (categoryId) {
-        include[0].include = [{ model: Category, where: { id: categoryId } }];
+        // Get all products in this category
+        const products = await Product.findAll({
+          where: { categoryId },
+          attributes: ["id"],
+          raw: true,
+        });
+
+        const productIds = products.map((p) => p.id);
+
+        where.productId = { [Op.in]: productIds };
       }
-      return Sale.sum(literal("quantity * price"), { where, include });
+
+      const result = await Sale.findAll({
+        where,
+        attributes: [
+          [
+            Sequelize.fn("SUM", Sequelize.literal("quantity * totalPrice")),
+            "totalRevenue",
+          ],
+        ],
+        raw: true,
+      });
+
+      return parseFloat(result[0]?.totalRevenue || 0);
     };
 
     const [rev1, rev2] = await Promise.all([
@@ -118,8 +150,9 @@ exports.compareRevenue = async (req, res) => {
       makeQuery(period2.start, period2.end),
     ]);
 
-    res.json({ period1: rev1 || 0, period2: rev2 || 0 });
+    res.json({ period1: rev1, period2: rev2 });
   } catch (err) {
-    res.status(400).json(err);
+    console.error("err", err);
+    res.status(400).json({ error: err.message });
   }
 };

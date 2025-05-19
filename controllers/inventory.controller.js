@@ -3,7 +3,10 @@ const { Op } = require("sequelize");
 
 exports.getInventory = async (req, res) => {
   try {
-    const inventory = await Inventory.findAll({ include: Product });
+    const inventory = await Inventory.findAll({
+      model: Product,
+      as: "product",
+    });
     res.json(inventory);
   } catch (err) {
     res.status(400).json(err);
@@ -15,6 +18,7 @@ exports.getLowStock = async (req, res) => {
     const inventory = await Inventory.findAll({
       where: { quantity: { [Op.lt]: 10 } },
       include: Product,
+      as: "product",
     });
     res.json(inventory);
   } catch (err) {
