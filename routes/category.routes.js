@@ -5,12 +5,11 @@ const {
   createCategoryValidator,
   updateCategoryValidator,
 } = require("../validators/category.validator");
-const { validationResult } = require("express-validator");
-
+const validateRequest = require("../middlewares/validate");
 router.post(
   "/",
   createCategoryValidator,
-  validationResult,
+  validateRequest,
   categoryController.createCategory
 );
 router.get("/", categoryController.getAllCategories);
@@ -18,7 +17,7 @@ router.get("/:id", categoryController.getCategoryById);
 router.put(
   "/:id",
   updateCategoryValidator,
-  validationResult,
+  validateRequest,
   categoryController.updateCategory
 );
 router.delete("/:id", categoryController.deleteCategory);

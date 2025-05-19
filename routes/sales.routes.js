@@ -2,13 +2,13 @@ const express = require("express");
 const router = express.Router();
 const salesController = require("../controllers/sales.controller");
 const { createSaleValidator } = require("../validators/sale.validator");
-const { validationResult } = require("express-validator");
+const validateRequest = require("../middlewares/validate");
 
 router.get("/", salesController.getSales);
 router.post(
   "/",
   createSaleValidator,
-  validationResult,
+  validateRequest,
   salesController.createSale
 );
 router.put("/:id", salesController.updateSale);
