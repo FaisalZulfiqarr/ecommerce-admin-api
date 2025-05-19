@@ -9,8 +9,6 @@ module.exports = {
         allowNull: false,
         unique: true,
         references: { model: "Products", key: "id" },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
       },
       stock: { type: Sequelize.INTEGER, allowNull: false },
       lastUpdated: { type: Sequelize.DATE, defaultValue: Sequelize.NOW },

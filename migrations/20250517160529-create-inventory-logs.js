@@ -7,9 +7,7 @@ module.exports = {
       productId: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        references: { model: "Products", key: "id" },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        references: { model: "Products", key: "id" }
       },
       change: { type: Sequelize.INTEGER, allowNull: false },
       reason: { type: Sequelize.STRING, allowNull: false },

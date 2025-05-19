@@ -8,8 +8,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: { model: "Products", key: "id" },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+
       },
       quantity: { type: Sequelize.INTEGER, allowNull: false },
       totalPrice: { type: Sequelize.FLOAT, allowNull: false },
